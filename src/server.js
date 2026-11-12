@@ -9,7 +9,7 @@ import { AgentRouterAutomation } from './automation.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
 const dataDir = path.join(root, 'data');
-const store = new Store(path.join(dataDir, 'agentrouter.sqlite'));
+const store = new Store(path.join(dataDir, 'agentrouter.json'));
 fs.mkdirSync(path.join(root, 'browser-profiles'), { recursive: true });
 
 const app = express();
