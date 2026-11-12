@@ -52,7 +52,17 @@ export class AgentRouterAutomation {
     let page;
     try {
       page = context.pages()[0] || await context.newPage();
-      const before = await this.readBalance(page, context).catch(() => null);
+      let apiUser = null;
+      page.on('request', async request => {
+        try {
+          const headers = await request.allHeaders();
+          if (headers['new-api-user']) apiUser = String(headers['new-api-user']);
+        } catch { /* request may finish while context is closing */ }
+      });
+      // Load the signed-in console first so the app can emit its account identity header.
+      await page.goto(`${BASE}/console`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+      await page.waitForTimeout(1800);
+      const before = await this.readBalance(page, context, apiUser).catch(() => null);
 
       // Remove only AgentRouter cookies. GitHub's saved login remains in the profile.
       const cookies = await context.cookies(BASE);
@@ -76,7 +86,7 @@ export class AgentRouterAutomation {
       const session = sessionCookies.find(c => c.name === 'session' && c.value);
       if (!session) throw new Error('OAuth 返回后没有检测到新的 AgentRouter session');
 
-      const after = await this.readBalance(page, context).catch(error => {
+      const after = await this.readBalance(page, context, apiUser).catch(error => {
         this.log('warn', `余额读取失败：${error.message}`);
         return null;
       });
@@ -102,21 +112,22 @@ export class AgentRouterAutomation {
     }
   }
 
-  async readBalance(page, context) {
+  async readBalance(page, context, apiUser) {
     const cookies = await context.cookies(BASE);
     const session = cookies.find(c => c.name === 'session' && c.value);
     if (!session) return null;
-    const result = await page.evaluate(async () => {
+    const result = await page.evaluate(async (identity) => {
       const response = await fetch('/api/user/self', {
         credentials: 'include',
         cache: 'no-store',
-        headers: { Accept: 'application/json' }
+        headers: identity ? { Accept: 'application/json', 'new-api-user': identity } : { Accept: 'application/json' }
       });
       if (!response.ok) throw new Error(`余额接口 HTTP ${response.status}`);
       return response.json();
-    });
+    }, apiUser);
     if (!result?.success || !result?.data) throw new Error('余额接口返回格式异常');
     const data = result.data;
+    if (apiUser && String(data.id) !== String(apiUser)) throw new Error('余额接口账号 ID 与当前账号不匹配');
     return {
       userId: data.id == null ? null : String(data.id),
       quota: Number((Number(data.quota || 0) / 500000).toFixed(2)),
