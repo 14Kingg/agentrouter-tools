@@ -32,7 +32,7 @@ The server binds to loopback only. Do not expose it to the public network: the l
 ## First-time account setup
 
 1. Click **Add account** in the UI.
-2. Enter a local display name and click **Start GitHub login**.
+2. Enter a local display name and click **添加 GitHub 账号**.
 3. Click **使用 GitHub 继续**, then complete GitHub sign-in / MFA / OAuth approval in the opened browser.
 4. The app verifies an AgentRouter session cookie and saves the persistent profile.
 
