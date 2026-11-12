@@ -49,7 +49,6 @@ Balance endpoint defaults to `GET /api/user/self`; quota units are converted usi
 Settings in the UI:
 - Daily run time (local timezone; default 01:00)
 - Optional HTTP proxy (for example `http://127.0.0.1:7890`)
-- Headless mode (first-time account setup always opens a visible browser)
 
 ## Security
 
