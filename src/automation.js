@@ -82,15 +82,31 @@ export class AgentRouterAutomation {
       await page.goto(`${BASE}/login`, { waitUntil: 'domcontentloaded', timeout: 60000 });
       const githubButton = page.getByText('使用 GitHub 继续', { exact: true }).first();
       await githubButton.waitFor({ state: 'visible', timeout: 30000 });
+      const popupPromise = context.waitForEvent('page', { timeout: 8000 }).catch(() => null);
       await githubButton.click();
+      const oauthPage = await popupPromise;
 
-      this.log('info', `「${account.name}」已发起 GitHub OAuth，等待 AgentRouter 回调`);
-      await page.waitForURL(url => url.hostname === 'agentrouter.org' && !url.pathname.includes('/login'), { timeout: 120000 });
-      await page.waitForTimeout(2500);
-
-      const sessionCookies = await context.cookies(BASE);
-      const session = sessionCookies.find(c => c.name === 'session' && c.value);
-      if (!session) throw new Error('OAuth 返回后没有检测到新的 AgentRouter session');
+      this.log('info', `「${account.name}」已发起 GitHub OAuth${oauthPage ? '（新窗口）' : ''}，等待 AgentRouter 回调`);
+      // AgentRouter deployments may complete OAuth in the same tab or a popup.
+      // Wait for a provider-origin page and a newly issued provider session cookie.
+      const deadline = Date.now() + 120000;
+      let session = null;
+      while (Date.now() < deadline) {
+        const providerPage = context.pages().find(candidate => {
+          try {
+            const url = new URL(candidate.url());
+            return url.hostname === 'agentrouter.org' && !url.pathname.includes('/login');
+          } catch { return false; }
+        });
+        const sessionCookies = await context.cookies(BASE);
+        session = sessionCookies.find(cookie => cookie.name === 'session' && cookie.value);
+        if (providerPage && session) {
+          page = providerPage;
+          break;
+        }
+        await page.waitForTimeout(500);
+      }
+      if (!session) throw new Error('OAuth 返回超时：没有检测到新的 AgentRouter session');
 
       const after = await this.readBalance(page, context, apiUser).catch(error => {
         this.log('warn', `余额读取失败：${error.message}`);
