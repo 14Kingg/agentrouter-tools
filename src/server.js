@@ -92,6 +92,7 @@ app.put('/api/settings', (req, res) => {
   if (!cron.validate(scheduleValue)) return res.status(400).json({ error: 'Cron 表达式无效' });
   store.setSetting('schedule', scheduleValue);
   store.setSetting('enabled', req.body.enabled ? 'true' : 'false');
+  store.setSetting('proxyUrl', String(req.body.proxyUrl || '').trim());
   if (req.body.enabled) schedule();
   else if (globalThis.dailyTask) globalThis.dailyTask.stop();
   res.json({ ok: true });
