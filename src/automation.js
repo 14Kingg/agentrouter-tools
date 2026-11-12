@@ -3,7 +3,6 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 const BASE = 'https://agentrouter.org';
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 export class AgentRouterAutomation {
   constructor({ profileRoot, db, log }) {
@@ -72,9 +71,6 @@ export class AgentRouterAutomation {
 
       // Remove only AgentRouter cookies. GitHub's saved login remains in the profile.
       const cookies = await context.cookies(BASE);
-      const providerCookies = cookies
-        .filter(cookie => cookie.domain === 'agentrouter.org' || cookie.domain === '.agentrouter.org')
-        .map(cookie => ({ name: cookie.name, value: '', domain: cookie.domain, path: cookie.path, expires: 0 }));
       for (const cookie of providerCookies) {
         await context.clearCookies({ name: cookie.name, domain: cookie.domain });
       }
