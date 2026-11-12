@@ -10,7 +10,6 @@
     "install:browser": "playwright install chromium"
   },
   "dependencies": {
-    "better-sqlite3": "^11.8.1",
     "express": "^4.21.2",
     "node-cron": "^3.0.3",
     "playwright": "^1.51.0"
