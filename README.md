@@ -33,7 +33,7 @@ The server binds to loopback only. Do not expose it to the public network: the l
 
 1. Click **Add account** in the UI.
 2. Enter a local display name and click **Start GitHub login**.
-3. Complete GitHub sign-in / MFA / OAuth approval in the opened browser.
+3. Click **使用 GitHub 继续**, then complete GitHub sign-in / MFA / OAuth approval in the opened browser.
 4. The app verifies an AgentRouter session cookie and saves the persistent profile.
 
 The OAuth provider may require a one-time manual approval or challenge. The app does not bypass MFA, CAPTCHA or GitHub security checks.
@@ -58,6 +58,6 @@ Settings in the UI:
 - Keep the app bound to localhost.
 - Back up the `data/` and `browser-profiles/` directories together if you want to migrate accounts.
 
-## Development status
+## Reference and attribution\n\nThe workflow design was informed by [jiang7f/checkin-agentrouter](https://github.com/jiang7f/checkin-agentrouter) (MIT License, Copyright (c) 2026 jiang7f). This repository contains an independent Node.js implementation; no Python source files are bundled. See `THIRD_PARTY_NOTICES.md`.\n\n## Development status
 
 Initial implementation. Validate OAuth selectors and AgentRouter's balance response against your account before relying on unattended scheduling. Browser challenges and expired GitHub sessions require user intervention.
