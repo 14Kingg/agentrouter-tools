@@ -100,8 +100,8 @@ export class AgentRouterAutomation {
         });
         const sessionCookies = await context.cookies(BASE);
         session = sessionCookies.find(cookie => cookie.name === 'session' && cookie.value);
-        if (providerPage && session) {
-          page = providerPage;
+        if (session) {
+          page = providerPage || page;
           break;
         }
         await page.waitForTimeout(500);
