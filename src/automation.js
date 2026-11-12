@@ -70,7 +70,7 @@ export class AgentRouterAutomation {
       const before = await this.readBalance(page, context, apiUser).catch(() => null);
 
       // Remove only AgentRouter cookies. GitHub's saved login remains in the profile.
-      const cookies = await context.cookies(BASE);
+      const providerCookies = await context.cookies(BASE);
       for (const cookie of providerCookies) {
         await context.clearCookies({ name: cookie.name, domain: cookie.domain });
       }
