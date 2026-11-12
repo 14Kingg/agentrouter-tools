@@ -27,14 +27,14 @@ input{min-width:100px}.field{display:flex;gap:8px;align-items:center}
  <div class="card"><small>定时任务</small><div class="metric" id="scheduleView">01:00</div></div>
 </div>
 <section class="card section"><div class="toolbar"><h2 style="margin-right:auto">账号管理</h2><input id="accountName" placeholder="账号备注，例如 main"><button class="primary" onclick="addAccount()">添加 GitHub 账号</button><button onclick="runNow()">立即签到</button></div><div id="accounts" class="section muted">暂无账号</div></section>
-<section class="card section"><h2>自动任务</h2><div class="toolbar"><label class="field">每天时间 <input type="time" id="runTime" value="01:00"></label><label class="field"><input type="checkbox" id="enabled" checked>启用自动签到</label><button class="primary" onclick="saveSettings()">保存设置</button></div><small>按运行这台电脑的本地时区执行；电脑休眠或关机时不会运行。</small></section>
+<section class="card section"><h2>自动任务</h2><div class="toolbar"><label class="field">每天时间 <input type="time" id="runTime" value="01:00"></label><label class="field">HTTP 代理 <input id="proxyUrl" placeholder="http://127.0.0.1:7890" style="width:230px"></label><label class="field"><input type="checkbox" id="enabled" checked>启用自动签到</label><button class="primary" onclick="saveSettings()">保存设置</button></div><small>按运行这台电脑的本地时区执行；电脑休眠或关机时不会运行。</small></section>
 <section class="card section"><h2>执行记录</h2><div id="runs" class="muted">暂无记录</div></section>
 <section class="card section"><h2>实时日志</h2><div id="logs" class="logs"></div></section>
 </main>
 <script>
 const $=id=>document.getElementById(id);
 async function api(url,options={}){const r=await fetch(url,{headers:{'Content-Type':'application/json'},...options});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||r.statusText);return d}
-async function refresh(){const s=await api('/api/state');$('accountCount').textContent=s.accounts.length;$('status').textContent=s.running?'任务执行中':'服务运行中';$('scheduleView').textContent=s.enabled?s.schedule:'已暂停';$('enabled').checked=s.enabled;const m=s.schedule.match(/^(\d+) (\d+) \* \* \*$/);if(m)$('runTime').value=m[2].padStart(2,'0')+':'+m[1].padStart(2,'0');
+async function refresh(){const s=await api('/api/state');$('accountCount').textContent=s.accounts.length;$('status').textContent=s.running?'任务执行中':'服务运行中';$('scheduleView').textContent=s.enabled?s.schedule:'已暂停';$('enabled').checked=s.enabled;$('proxyUrl').value=s.proxyUrl||'';const m=s.schedule.match(/^(\d+) (\d+) \* \* \*$/);if(m)$('runTime').value=m[2].padStart(2,'0')+':'+m[1].padStart(2,'0');
 $('accounts').innerHTML=s.accounts.length?s.accounts.map(a=>'<div class="row"><div><b>'+esc(a.name)+'</b><br><small>'+esc(a.status)+'</small></div><button class="danger" onclick="removeAccount('+a.id+')">删除</button></div>').join(''):'尚未添加账号';
 $('runs').innerHTML=s.runs.length?s.runs.slice(0,12).map(r=>'<div class="row"><div><b>'+esc(r.account_name)+'</b><br><small>'+esc(r.message||'')+'</small></div><span class="pill">'+esc(r.status)+' · '+esc(r.created_at)+'</span></div>').join(''):'暂无记录';
 $('lastRun').textContent=s.runs[0]?s.runs[0].status:'--'}
@@ -42,7 +42,7 @@ function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 async function addAccount(){const name=$('accountName').value.trim();if(!name)return alert('请填写账号备注');try{await api('/api/accounts',{method:'POST',body:JSON.stringify({name})});$('accountName').value='';await refresh()}catch(e){alert(e.message)}}
 async function removeAccount(id){if(!confirm('确定删除该账号及本地浏览器会话？'))return;await api('/api/accounts/'+id,{method:'DELETE'});refresh()}
 async function runNow(){try{await api('/api/run',{method:'POST'});alert('签到任务已启动')}catch(e){alert(e.message)}}
-async function saveSettings(){const [h,m]=$('runTime').value.split(':');await api('/api/settings',{method:'PUT',body:JSON.stringify({schedule:m+' '+Number(h)+' * * *',enabled:$('enabled').checked})});refresh();alert('设置已保存')}
+async function saveSettings(){const [h,m]=$('runTime').value.split(':');await api('/api/settings',{method:'PUT',body:JSON.stringify({schedule:m+' '+Number(h)+' * * *',enabled:$('enabled').checked,proxyUrl:$('proxyUrl').value.trim()})});refresh();alert('设置已保存')}
 const es=new EventSource('/api/events');es.onmessage=e=>{const l=JSON.parse(e.data);$('logs').textContent='['+l.time+'] ['+l.level.toUpperCase()+'] '+l.message+'\n'+$('logs').textContent;refresh()};
 refresh().catch(e=>{$('status').textContent=e.message});
 </script></body></html>
