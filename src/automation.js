@@ -12,6 +12,13 @@ export class AgentRouterAutomation {
     this.log = log;
   }
 
+  browserOptions(headless) {
+    const options = { headless, viewport: { width: 1440, height: 960 } };
+    const proxy = this.db.getSetting('proxyUrl', '').trim();
+    if (proxy) options.proxy = { server: proxy };
+    return options;
+  }
+
   profilePath(accountId) {
     return path.join(this.profileRoot, String(accountId));
   }
@@ -20,7 +27,7 @@ export class AgentRouterAutomation {
     const account = this.db.createAccount(name);
     const context = await chromium.launchPersistentContext(
       this.profilePath(account.id),
-      { headless: false, viewport: { width: 1440, height: 960 } }
+      this.browserOptions(false)
     );
     try {
       const page = context.pages()[0] || await context.newPage();
@@ -46,8 +53,7 @@ export class AgentRouterAutomation {
     const profileDir = this.profilePath(account.id);
     await fs.access(profileDir);
     const context = await chromium.launchPersistentContext(profileDir, {
-      headless: true,
-      viewport: { width: 1440, height: 960 }
+      ...this.browserOptions(true)
     });
     let page;
     try {
