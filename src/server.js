@@ -55,6 +55,7 @@ app.get('/api/state', (req, res) => res.json({
   accounts: store.getAccounts(),
   runs: store.getRuns(),
   schedule: store.getSetting('schedule', '0 1 * * *'),
+  proxyUrl: store.getSetting('proxyUrl', ''),
   enabled: store.getSetting('enabled', 'true') === 'true',
   running
 }));
