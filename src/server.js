@@ -49,7 +49,7 @@ function schedule() {
     runAll().catch(error => log('error', error.message));
   });
 }
-schedule();
+if (store.getSetting('enabled', 'true') === 'true') schedule();
 
 app.get('/api/state', (req, res) => res.json({
   accounts: store.getAccounts(),
