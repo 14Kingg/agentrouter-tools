@@ -23,7 +23,7 @@ export class AgentRouterAutomation {
   }
 
   async addAccount(name) {
-    const account = this.db.createAccount(name);
+    const account = this.db.getAccounts().find(item => item.name === name) || this.db.createAccount(name);
     const context = await chromium.launchPersistentContext(
       this.profilePath(account.id),
       this.browserOptions(false)
